@@ -4,6 +4,7 @@ public class SaleResponse {
     private Integer id;
     private String saleNumber;
     private String message;
+   private Integer ProductId;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -13,4 +14,7 @@ public class SaleResponse {
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+
+    public Integer getProductId() { return ProductId; }
+    public void setProductId(Integer productId) { ProductId = productId; }
 }

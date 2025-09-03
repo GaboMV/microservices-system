@@ -5,7 +5,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "saleNumber": "SALE-0070", 
+  "saleNumber": "SALE-0071", 
   "productId": 6,
   "quantity": 1,
   "unitPrice": 0.99,  
