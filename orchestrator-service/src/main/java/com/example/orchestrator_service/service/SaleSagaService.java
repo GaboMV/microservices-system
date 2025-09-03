@@ -56,6 +56,7 @@ public class SaleSagaService {
             Map<String, Integer> stockUpdate = Map.of("stockQuantity", newStock);
 
             restTemplate.put(warehousePutUrl, stockUpdate);
+            stockDecreased = true;
             logger.info("✅ Stock actualizado en warehouse. Nuevo stock: {}", newStock);
 
             // 3️⃣ Registrar venta en sales-service
@@ -96,11 +97,13 @@ public class SaleSagaService {
     private void rollback(SaleRequest request, boolean stockDecreased, boolean saleCreated) {
         // 1️⃣ Restaurar stock si se descontó
         if (stockDecreased) {
-            try {
-                restTemplate.put(
-                        "http://warehouse/api/products/" + request.getProductId() + "/stock/add",
-                        Map.of("quantity", request.getQuantity())
-                );
+           try {
+            restTemplate.put(
+                
+                    "http://warehouse/api/products/" + request.getProductId() + "/stock/increase",
+                    
+                    Map.of("quantity", request.getQuantity())
+            );
                 logger.info("↩️ Rollback stock aplicado: stock restaurado");
             } catch (Exception ex) {
                 logger.warn("⚠️ Error al restaurar stock en warehouse: {}", ex.getMessage());

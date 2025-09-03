@@ -22,7 +22,9 @@ Este proyecto implementa un sistema de ventas distribuido utilizando **Spring Bo
 La configuración de cada microservicio utiliza PostgreSQL y Mysql:
 
 jdbc:postgresql://localhost:15432/sales
+
 jdbc:postgresql://localhost:15432/accounting
+
 jdbc:mysql://localhost:13306/warehouse
 
 ## Ejecución de microservicios
@@ -74,23 +76,41 @@ Accept: application/json
 {
   "saleNumber": "SALE-0025", #cambiar numero de venta en cada consulta
   "productId": 5,
+  
   "quantity": 1,
+  
   "debit_amount": 8.99, 
+  
   "credit_amount": 10.00,
+  
   "unitPrice": 1.99,  #UnitPrice en 0.99 para disparar el trigger
+  
   "totalAmount": 0.99,
+  
   "discountPercentage": 10.0,
+  
   "discountAmount": 50.25,
+  
   "finalAmount": 452.25,
+  
   "saleDate": "2025-09-02",
+  
   "customerId": 1,
+  
   "customerName": "Juan Perez",
+  
   "salesperson": "Maria Lopez",
+  
   "paymentMethod": "card",
+  
   "paymentStatus": "pending",
+  
   "notes": "Venta prueba",
+  
   "createdAt": "2025-09-02T10:00:00",
+  
   "updatedAt": "2025-09-02T10:00:00"
+  
 }
 
 
