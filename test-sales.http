@@ -5,10 +5,10 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "saleNumber": "SALE-0063", 
+  "saleNumber": "SALE-0070", 
   "productId": 6,
   "quantity": 1,
-  "unitPrice": 5.99,  
+  "unitPrice": 0.99,  
   "totalAmount": 502.50,
   "discountPercentage": 10.0,
   "discountAmount": 50.25,

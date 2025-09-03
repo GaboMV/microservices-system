@@ -37,8 +37,8 @@ public class SaleSagaService {
         boolean stockDecreased = false;
         boolean saleCreated = false;
         Integer saleId = null;     // ✅ Aquí guardaremos el id de la venta
-        Integer  journalId = null; 
-
+        String  journalCode = null; 
+JournalRequest journalDto = null;   // ✅ Aquí guardaremos el asiento contable creado
         try {
             // 1️⃣ Consultar producto en warehouse
             ProductRequest product = restTemplate.getForObject(
@@ -83,7 +83,7 @@ if (!saleResponse.getStatusCode().is2xxSuccessful() || saleResponse.getBody() ==
             logger.info("✅ Venta registrada en sales-service: {}", saleResponse.getBody());
 
             // 4️⃣ Registrar asiento contable en accounting
-            JournalRequest journalDto = new JournalRequest(
+             journalDto = new JournalRequest(
                     "1010", product.getName(), "Venta de " + product.getName(),
                     saleRequest.getUnitPrice().multiply(BigDecimal.valueOf(saleRequest.getQuantity())),
                     "D", "sales-system", "Sales", "CC01",
@@ -97,12 +97,14 @@ if (!saleResponse.getStatusCode().is2xxSuccessful() || saleResponse.getBody() ==
                     journalDto,
                     JournalResponse.class
             );
+             journalCode = journalResponse.getBody().getBalanceType();
+             logger.info("**El tipo de balance Es:", journalCode);
  if (!journalResponse.getStatusCode().is2xxSuccessful() || journalResponse.getBody() == null) {
                 throw new RuntimeException("Error registrando asiento contable");
             }
-              journalId = journalResponse.getBody().getId(); 
+            
 
-                        logger.info("✅ Asiento contable registrado en accounting");
+            logger.info("✅ Asiento contable registrado en accounting");
 
             logger.info("🎉 Saga completada exitosamente");
 
@@ -113,19 +115,19 @@ ProductRequest sale = restTemplate.getForObject(
                     "http://warehouse/api/products/" + productId,
                     ProductRequest.class
             );
-  rollback(productId, saleId, journalId, saleRequest, stockDecreased, saleCreated);
+  rollback(productId, saleId,saleRequest, stockDecreased, saleCreated, journalDto, journalCode);
             throw new RuntimeException("Saga fallida y rollback aplicado: " + e.getMessage());
             
         }
     }
 
-    private void rollback(Integer productId, Integer saleId, Integer journalId, SaleRequest request, boolean stockDecreased, boolean saleCreated) {
+    private void rollback(Integer productId, Integer saleId, SaleRequest request, boolean stockDecreased, boolean saleCreated, JournalRequest journalRequest, String journalCode) {
         // 1️⃣ Restaurar stock si se descontó
         if (stockDecreased) {
            try {
             restTemplate.put(
                 
-                    "http://warehouse/api/products/" + request.getId() + "/stock/increase",
+                    "http://warehouse/api/products/" + productId + "/stock/increase",
                     
                     Map.of("quantity", request.getQuantity())
             );
@@ -147,16 +149,14 @@ ProductRequest sale = restTemplate.getForObject(
 
         // 3️⃣ Registrar asiento contable compensatorio
         try {
-            JournalRequest compensatory = new JournalRequest(
-                    "1010", "Compensación", "Rollback de venta fallida",
-                    request.getUnitPrice().multiply(BigDecimal.valueOf(request.getQuantity())),
-                    "C", "sales-system", "Sales", "CC01",
-                    "Compensación por rollback de venta",
-                    "REF-ROLLBACK-" + request.getProductId(),
-                    LocalDate.now()
+           
+            journalRequest.setBalanceType(journalCode.equals("D") ? "C" : "D"); // Invertir tipo de balance
+           ResponseEntity<JournalResponse> journalResponse = restTemplate.postForEntity(
+                    "http://accounting/api/journals",
+                    journalRequest,
+                    JournalResponse.class
             );
-            restTemplate.postForObject("http://accounting/api/journals", compensatory, Void.class);
-            logger.info("↩️ Rollback contable aplicado: asiento compensatorio registrado");
+             logger.info("↩️ Rollback asiento contable aplicado: asiento compensatorio registrado, tipo de codigo: "+journalRequest.getBalanceType());
         } catch (Exception ex) {
             logger.warn("⚠️ Error al registrar asiento compensatorio: {}", ex.getMessage());
         }

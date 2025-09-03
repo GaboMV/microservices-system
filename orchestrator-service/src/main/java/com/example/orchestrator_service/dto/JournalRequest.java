@@ -22,6 +22,8 @@ public class JournalRequest {
     private String costCenter;
     private String notes;
 
+    
+
     public JournalRequest() {}
 
     // Constructor para inicializar rápidamente
