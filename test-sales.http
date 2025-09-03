@@ -3,7 +3,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "saleNumber": "SALE-0014",
+  "saleNumber": "SALE-0014", # cambiar saleNumber
   "productId": 3,
   "quantity": 1,
   "unitPrice": 1.99,
