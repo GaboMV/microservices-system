@@ -6,7 +6,7 @@ Accept: application/json
   "saleNumber": "SALE-0014", # cambiar saleNumber
   "productId": 3,
   "quantity": 1,
-  "unitPrice": 1.99,
+  "unitPrice": 1.99,  #UnitPrice en 0.99 para disparar el trigger
   "totalAmount": 502.50,
   "discountPercentage": 10.0,
   "discountAmount": 50.25,
