@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.orchestrator_service.dto.JournalRequest;
+import com.example.orchestrator_service.dto.JournalResponse;
 import com.example.orchestrator_service.dto.ProductRequest;
 import com.example.orchestrator_service.dto.SaleRequest;
+import com.example.orchestrator_service.dto.SaleResponse;
 
 
 
@@ -34,6 +36,8 @@ public class SaleSagaService {
 
         boolean stockDecreased = false;
         boolean saleCreated = false;
+        Integer saleId = null;     // ✅ Aquí guardaremos el id de la venta
+        Integer  journalId = null; 
 
         try {
             // 1️⃣ Consultar producto en warehouse
@@ -60,15 +64,21 @@ public class SaleSagaService {
             logger.info("✅ Stock actualizado en warehouse. Nuevo stock: {}", newStock);
 
             // 3️⃣ Registrar venta en sales-service
-            ResponseEntity<String> saleResponse = restTemplate.postForEntity(
-                    "http://sales/api/sales/direct",
-                    saleRequest,
-                    String.class
-            );
+            
 
-            if (!saleResponse.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("Error creando venta en sales-service");
-            }
+ResponseEntity<SaleResponse> saleResponse = restTemplate.postForEntity(
+        "http://sales/api/sales/direct",
+        saleRequest,
+        SaleResponse.class   // ✅ Aquí pedimos que lo convierta en SaleResponse
+);
+
+if (!saleResponse.getStatusCode().is2xxSuccessful() || saleResponse.getBody() == null) {
+    throw new RuntimeException("Error creando venta en sales-service");
+}
+
+ saleId = saleResponse.getBody().getId(); // ✅ Ahora sí funciona
+
+
             saleCreated = true;
             logger.info("✅ Venta registrada en sales-service: {}", saleResponse.getBody());
 
@@ -82,25 +92,40 @@ public class SaleSagaService {
                     saleRequest.getSaleDate() != null ? saleRequest.getSaleDate() : LocalDate.now()
             );
 
-            restTemplate.postForObject("http://accounting/api/journals", journalDto, Void.class);
-            logger.info("✅ Asiento contable registrado en accounting");
+ ResponseEntity<JournalResponse> journalResponse = restTemplate.postForEntity(
+                    "http://accounting/api/journals",
+                    journalDto,
+                    JournalResponse.class
+            );
+ if (!journalResponse.getStatusCode().is2xxSuccessful() || journalResponse.getBody() == null) {
+                throw new RuntimeException("Error registrando asiento contable");
+            }
+              journalId = journalResponse.getBody().getId(); 
+
+                        logger.info("✅ Asiento contable registrado en accounting");
 
             logger.info("🎉 Saga completada exitosamente");
 
         } catch (Exception e) {
             logger.error("❌ Error en la saga: {}. Ejecutando rollback...", e.getMessage());
-            rollback(saleRequest, stockDecreased, saleCreated);
+           saleCreated = true;
+ProductRequest sale = restTemplate.getForObject(
+                    "http://warehouse/api/products/" + productId,
+                    ProductRequest.class
+            );
+  rollback(productId, saleId, journalId, saleRequest, stockDecreased, saleCreated);
             throw new RuntimeException("Saga fallida y rollback aplicado: " + e.getMessage());
+            
         }
     }
 
-    private void rollback(SaleRequest request, boolean stockDecreased, boolean saleCreated) {
+    private void rollback(Integer productId, Integer saleId, Integer journalId, SaleRequest request, boolean stockDecreased, boolean saleCreated) {
         // 1️⃣ Restaurar stock si se descontó
         if (stockDecreased) {
            try {
             restTemplate.put(
                 
-                    "http://warehouse/api/products/" + request.getProductId() + "/stock/increase",
+                    "http://warehouse/api/products/" + request.getId() + "/stock/increase",
                     
                     Map.of("quantity", request.getQuantity())
             );
@@ -113,7 +138,7 @@ public class SaleSagaService {
         // 2️⃣ Eliminar venta si se creó
         if (saleCreated) {
             try {
-                restTemplate.delete("http://sales/api/sales/" + request.getSaleNumber());
+                restTemplate.delete("http://sales/api/sales/id/" + saleId);
                 logger.info("↩️ Rollback venta aplicado: venta eliminada");
             } catch (Exception ex) {
                 logger.warn("⚠️ Error al eliminar venta en sales-service: {}", ex.getMessage());
