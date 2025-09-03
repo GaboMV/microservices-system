@@ -121,7 +121,17 @@ public class SaleService {
 
         return savedSale;
     }
+public Sale saveDirectSale(Sale sale) {
+    return saleRepository.save(sale);
+}
+@Transactional
+    public void deleteSale(Sale sale) {
+        saleRepository.delete(sale);
+    }
 
+    public Sale findById(Long id) {
+        return saleRepository.findById(id).orElse(null);
+    }
     public Sale findBySaleNumber(String saleNumber) {
         return saleRepository.findBySaleNumber(saleNumber).orElse(null);
     }

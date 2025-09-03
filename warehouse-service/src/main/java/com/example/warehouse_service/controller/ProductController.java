@@ -62,4 +62,14 @@ public class ProductController {
 logger.info("Test endpoint called");       
         return ResponseEntity.ok("Warehouse service is running!");
     }
+    
+
+    @PutMapping("/{id}/stock/increase")
+public ResponseEntity<Product> increaseStock(
+        @PathVariable Integer id,
+        @RequestBody Map<String, Integer> body) {
+    int quantity = body.get("quantity");
+    Product updated = productStockBl.increaseStock(id, quantity);
+    return ResponseEntity.ok(updated);
+}
 }

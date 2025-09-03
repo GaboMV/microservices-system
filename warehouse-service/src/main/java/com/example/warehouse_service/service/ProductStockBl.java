@@ -48,5 +48,16 @@ public class ProductStockBl {
         // Save and return the updated product
         return productRepository.save(product);
     }
-    
+    public Product increaseStock(Integer productId, int quantity) {
+        Product product = getProductById(productId);
+        if (product == null) {
+            throw new IllegalArgumentException("Product not found with id " + productId);
+        }
+        if (quantity < 0) {
+            throw new IllegalArgumentException("Quantity cannot be negative");
+        }
+
+        product.setStockQuantity(product.getStockQuantity() + quantity);
+        return productRepository.save(product);
+    }
 }

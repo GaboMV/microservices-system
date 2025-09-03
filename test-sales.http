@@ -1,12 +1,48 @@
+POST  http://localhost:8095/saga/sale 
+Content-Type: application/json
+Accept: application/json
+
+{
+  "saleNumber": "SALE-0012",
+  "productId": 3,
+  "quantity": 1,
+  "unitPrice": 0.99,
+  "totalAmount": 502.50,
+  "discountPercentage": 10.0,
+  "discountAmount": 50.25,
+  "finalAmount": 452.25,
+  "saleDate": "2025-09-02",
+  "customerId": 1,
+  "customerName": "Juan Perez",
+  "salesperson": "Maria Lopez",
+  "paymentMethod": "card",
+  "paymentStatus": "pending",
+  "notes": "Venta prueba",
+  "createdAt": "2025-09-02T10:00:00",
+  "updatedAt": "2025-09-02T10:00:00"
+}
+
+
+PUT http://localhost:8082/ms-warehouse/api/products/1/stock/increase
+Content-Type: application/json
+
+{
+  "quantity": 5
+}
+
+
+DELETE http://localhost:8082/ms-accounting/api/journals/id/4
+
+
 
 
 POST  http://localhost:8082/ms-sale/api/sales
 Content-Type: application/json
 
 {
-  "saleNumber": "SALE-0001",
+  "saleNumber": "SALE-0006",
   "productId": 1,
-  "quantity": 5,
+  "quantity": 1,
   "unitPrice": 100.50,
   "totalAmount": 502.50,
   "discountPercentage": 10.0,
@@ -22,3 +58,5 @@ Content-Type: application/json
   "createdAt": "2025-09-02T10:00:00",
   "updatedAt": "2025-09-02T10:00:00"
 }
+
+DELETE   http://localhost:8082/ms-sale/api/sales/id/2
